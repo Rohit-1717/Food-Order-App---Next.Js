@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ Food Ordering Platform — Full Stack Project (Next.js 14 + Tailwind CSS)
 
-## Getting Started
+A production-grade full-stack Food Ordering Web Platform where customers can browse a menu, place mock orders, and track order status in real-time, while kitchen staff receives live updates and manages order workflows.
 
-First, run the development server:
+---
+
+## 🚀 Tech Stack
+
+### Frontend
+- **Next.js 14** (App Router)
+- **Tailwind CSS 3.4**
+- **Zustand** for state management
+- **WebSocket** client for real-time updates
+
+### Backend
+- **JSON-RPC 2.0** over HTTP via `app/api/rpc/route.ts`
+- **PostgreSQL 15** (via Docker)
+- **WebSocket Server** (custom handler or Node microservice)
+
+### DevOps & Deployment
+- **Docker** & `docker-compose`
+- **GitHub Actions** (optional)
+- **Vercel**  (for deployment)
+- `.env.example` for environment variables
+
+---
+
+## ✨ Features
+
+- 🧾 Browse menu by category in a responsive layout
+- 🛒 Add/Remove items from cart (persistent via localStorage)
+- 🧍 Checkout form with customer details
+- 📡 Order tracking with real-time WebSocket updates
+- 👨‍🍳 Kitchen Dashboard with live order status changes
+- 📊 Analytics widget showing revenue & order stats
+- 🔐 Follows production-grade architecture and folder standards
+
+---
+
+## 📂 Folder Structure
+
+- `app/` – App Router pages and API routes
+  - `app/api/rpc/` – JSON-RPC API handler
+- `components/` – Reusable UI components
+- `lib/` – WebSocket client, rpcClient, DB helpers
+- `styles/` – Tailwind base + global styles
+- `public/` – Static files (images/icons)
+- `prisma/` or `drizzle/` – DB schema & migration files
+- `.env.example` – Sample env configuration
+- `Dockerfile` – Container setup
+- `docker-compose.yml` – Local dev with Postgres
+- `README.md` – Project documentation
+- `PLAN.md` – Timeline and dev plan
+
+---
+
+## 📆 Project Timeline
+
+This project was completed in **6 days**:  
+- 5 Days → Development  
+- 1 Day → Testing, polish, and deployment
+
+Refer to [`PLAN.md`](./PLAN.md) for detailed timeline and goals.
+
+---
+
+## 🧪 Testing
+
+- **Backend:** Vitest unit tests for RPC handlers
+- **Frontend:** React Testing Library for core user flows
+- Sample Postman collection or cURL commands provided in `/docs/`
+
+---
+
+## 🐳 Running Locally with Docker
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone https://github.com/your-username/food-ordering-app.git
+cd food-ordering-app
