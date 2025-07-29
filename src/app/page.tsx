@@ -1,12 +1,19 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import HeroSection from "@/components/HeroSection";
+import CategorySection from "@/components/CategorySection";
+import PopularRestaurantSection from "@/components/PopularRestaurantSection";
+import DiscountSlider from "@/components/DiscountSlider";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <h1 className="text-3xl text-center text-orange-500 font-bold underline">
-        Food Order App
-      </h1>
-    </div>
+    <main className="flex flex-col gap-12">
+      <HeroSection />
+      <DiscountSlider />
+      <CategorySection />
+    </main>
   );
 }
+
+export const metadata = {
+  title: "Foodie | Order Fresh Food Online",
+  description: "Order healthy and fresh food anytime with Foodie",
+};
