@@ -11,7 +11,9 @@ export default function FoodGrid({
 }) {
   const filtered = mockMenuData
     .filter((item) => {
-      const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = item.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
       const matchVeg = filters.vegOnly ? item.type === "veg" : true;
       const matchRating = filters.rating4Plus ? item.rating >= 4 : true;
       const matchFast = filters.fastDelivery ? item.deliveryTime <= 30 : true;
@@ -25,7 +27,7 @@ export default function FoodGrid({
     });
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 mt-4">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 mt-4 ">
       {filtered.map((item) => (
         <FoodCard key={item.id} item={item} />
       ))}

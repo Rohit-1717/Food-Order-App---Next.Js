@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import 'keen-slider/keen-slider.min.css';
-
+@import "keen-slider/keen-slider.min.css";
 
 @layer base {
   :root {
@@ -31,7 +30,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem
+    --radius: 0.5rem;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -57,7 +56,7 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -70,3 +69,11 @@
   }
 }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

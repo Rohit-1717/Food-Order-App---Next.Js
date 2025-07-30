@@ -1,5 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import Link from "next/link";
 
 const categories = [
   {
@@ -75,29 +79,41 @@ export default function CategorySection() {
           Our Categories
         </h1>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-10">
           {categories.map((cat, idx) => (
-            <Card
+            <Link
+              href={`/menu/${encodeURIComponent(cat.name)}`}
               key={idx}
-              className="overflow-hidden border hover:shadow-lg transition-shadow cursor-pointer group"
+              passHref
             >
-              <div className="relative w-full h-32 md:h-40">
-                <Image
-                  src={cat.image}
-                  alt={cat.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardContent className="text-left p-4 space-y-1">
-                <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {cat.products} Products
-                </p>
-              </CardContent>
-            </Card>
+              <Card className="overflow-hidden border hover:shadow-lg transition-shadow cursor-pointer group">
+                <div className="relative w-full h-32 md:h-40">
+                  <Image
+                    src={cat.image}
+                    alt={cat.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <CardContent className="text-left p-4 space-y-2">
+                  <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+                    {cat.name}
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {cat.products} Products
+                    </p>
+                    <Button
+                      variant="order"
+                      size="sm"
+                      className="text-xs  hover:text-white transition-all"
+                    >
+                      Order Now
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
