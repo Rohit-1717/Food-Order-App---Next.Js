@@ -8,8 +8,8 @@ import UserAvatar from "./UserAvatar";
 import { NavLinkClient } from "@/components/NavLinkClient";
 
 export default async function Navbar() {
-  // 🔁 Simulated user logic (replace later with getCurrentUser)
-  const isLoggedIn = true;
+  const isLoggedIn = false;
+
   const user = isLoggedIn
     ? {
         name: "Rohit",
@@ -26,7 +26,7 @@ export default async function Navbar() {
           🍽️ Foodie
         </Link>
 
-        {/* Center Navigation for md+ */}
+        {/* Center Navigation (md and up) */}
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
           <Link href="/" className="hover:text-primary transition-colors">
             Home
@@ -38,12 +38,20 @@ export default async function Navbar() {
             Offers
           </Link>
           {isLoggedIn && (
-            <Link
-              href="/orders"
-              className="hover:text-primary transition-colors"
-            >
-              Orders
-            </Link>
+            <>
+              <Link
+                href="/orders"
+                className="hover:text-primary transition-colors"
+              >
+                Orders
+              </Link>
+              <Link
+                href="/track-order"
+                className="hover:text-primary transition-colors"
+              >
+                Track Order
+              </Link>
+            </>
           )}
         </nav>
 
@@ -59,9 +67,14 @@ export default async function Navbar() {
           {isLoggedIn ? (
             user && <UserAvatar user={user} />
           ) : (
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/auth/login">Login</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/kitchen/login">Kitchen Login</Link>
+              </Button>
+            </>
           )}
 
           <ModeToggle />
@@ -87,6 +100,10 @@ export default async function Navbar() {
                   <>
                     <Separator />
                     <NavLinkClient href="/orders">Orders</NavLinkClient>
+                    <Separator />
+                    <NavLinkClient href="/track-order">
+                      Track Order
+                    </NavLinkClient>
                   </>
                 )}
 
@@ -111,7 +128,11 @@ export default async function Navbar() {
                 ) : (
                   <>
                     <Separator />
-                    <NavLinkClient href="/login">Login</NavLinkClient>
+                    <NavLinkClient href="/auth/login">Login</NavLinkClient>
+                    <Separator />
+                    <NavLinkClient href="/kitchen-login">
+                      Kitchen Login
+                    </NavLinkClient>
                   </>
                 )}
 
