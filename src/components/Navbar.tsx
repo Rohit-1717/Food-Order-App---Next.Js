@@ -8,7 +8,7 @@ import UserAvatar from "./UserAvatar";
 import { NavLinkClient } from "@/components/NavLinkClient";
 
 export default async function Navbar() {
-  const isLoggedIn = false;
+  const isLoggedIn = true;
 
   const user = isLoggedIn
     ? {
@@ -113,7 +113,7 @@ export default async function Navbar() {
                 {isLoggedIn ? (
                   <>
                     <Separator />
-                    <NavLinkClient href="/account">Account</NavLinkClient>
+                    <NavLinkClient href="/user-account">Account</NavLinkClient>
                     <Separator />
                     <form action="/logout" method="POST">
                       <Button

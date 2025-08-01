@@ -25,7 +25,7 @@ export default function UserAvatar({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href="/account">Account</Link>
+          <Link href="/user-account">Account</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <form action="/logout" method="POST" className="w-full">
