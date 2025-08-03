@@ -8,21 +8,21 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { z } from "zod";
+import { createMenuSchema } from "@/app/api/rpc/schemas/menu/create";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MenuItem } from "@/types/types";
 
-
+type CreateMenuInput = z.infer<typeof createMenuSchema>;
 
 export interface AddDishModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAdd: (newDish: MenuItem) => void;
+  onAdd: (newDish: CreateMenuInput) => void;
 }
 
 export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
@@ -45,15 +45,16 @@ export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
   const handleSubmit = () => {
     if (!name || !price || !category) return;
 
-    const newDish: MenuItem = {
-      id: Date.now().toString(),
+    const newDish: CreateMenuInput = {
       name,
       price: parseFloat(price),
-      category,
-      discount: discount ? parseFloat(discount) : undefined,
-      isAvailable,
-      variants,
       image,
+      category,
+      type: "veg", // Hardcoded for now
+      kitchenId: "kitchen_1", // Hardcoded kitchenId for testing
+      deliveryTime: 30, // Hardcoded delivery time
+      rating: 4.5, // Optional, you can remove if needed
+      discount: discount || undefined,
     };
 
     onAdd(newDish);

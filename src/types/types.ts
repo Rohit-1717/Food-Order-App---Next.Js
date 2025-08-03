@@ -6,17 +6,23 @@ export type FiltersType = {
 };
 
 // src/types/MenuItem.ts
-export interface MenuItem {
+export type MenuItem = {
   id: string;
   name: string;
+  slug: string;
+  image: string;
   price: number;
+  type: "veg" | "non-veg";
+  rating?: number;
+  deliveryTime: number;
   category: string;
-  isAvailable: boolean;
-  image?: string;
   discount?: number;
+  isAvailable: boolean;
+  kitchenId: string;
+  createdAt?: string;
+  updatedAt?: string;
   variants?: string[];
-  isOffer?: boolean;
-}
+};
 
 export interface AddDishModalProps {
   open: boolean;

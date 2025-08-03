@@ -26,10 +26,25 @@ export function MenuCard({
   const [isAvailable, setIsAvailable] = useState(item.isAvailable);
   const [editOpen, setEditOpen] = useState(false);
   const [localItem, setLocalItem] = useState<MenuItem>(item);
-
-  const handleToggle = () => {
+  const handleToggle = async () => {
     const newState = !isAvailable;
     setIsAvailable(newState);
+    setLocalItem((prev) => ({ ...prev, isAvailable: newState }));
+
+    await fetch("/api/rpc", {
+      method: "POST",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "menu.update",
+        params: {
+          id: localItem.id,
+          isAvailable: newState,
+        },
+        id: 1,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
     onToggleAvailability?.(localItem.id, newState);
   };
 

@@ -1,21 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MenuCard } from "./MenuCard";
-import { mockMenuItems } from "@/lib/data/mockMenuItems";
 import { CategoryFilter } from "./CategoryFilter";
 import { MenuActions } from "./MenuActions";
 import { AddDishModal } from "./AddDishModal";
 import { MenuItem } from "@/types/types";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
+import { callRpc } from "@/lib/jsonRpcClient";
 
 export function MenuList() {
-  const [items, setItems] = useState<MenuItem[]>(mockMenuItems);
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // ✅ Fetch data from DB on mount
+  useEffect(() => {
+    async function fetchMenu() {
+      try {
+        const result = await callRpc("menu.list");
+        setItems(result);
+      } catch (err: any) {
+        toast.error("Failed to load menu");
+        console.error(err);
+      }
+    }
+
+    fetchMenu();
+  }, []);
+
+  // ✅ Apply filters & sorting
   let filteredItems = selectedCategory
     ? items.filter((item) => item.category === selectedCategory)
     : items;
@@ -32,13 +48,13 @@ export function MenuList() {
 
   return (
     <div className="space-y-4">
-      {/* Category Filter */}
+      {/* Filter */}
       <CategoryFilter
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
 
-      {/* Search, Sort, Add */}
+      {/* Top Actions */}
       <MenuActions
         search={search}
         setSearch={setSearch}
@@ -51,25 +67,42 @@ export function MenuList() {
       <AddDishModal
         open={isAddModalOpen}
         setOpen={setIsAddModalOpen}
-        onAdd={(newDish) => {
-          setItems((prev) => [newDish, ...prev]);
-          toast.success("New dish added successfully!");
+        onAdd={async (newDish) => {
+          try {
+            const created = await callRpc("menu.create", newDish);
+            setItems((prev) => [created, ...prev]);
+            toast.success("New dish saved to DB!");
+          } catch (err: any) {
+            toast.error("Failed to save dish: " + err.message);
+          }
         }}
       />
 
-      {/* Menu Items Grid */}
+      {/* Grid of Menu Items */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredItems.map((item) => (
           <MenuCard
             key={item.id}
             item={item}
-            onDelete={(id) => {
-              setItems((prev) => prev.filter((dish) => dish.id !== id));
+            onDelete={async (id) => {
+              try {
+                await callRpc("menu.delete", { id });
+                setItems((prev) => prev.filter((dish) => dish.id !== id));
+                toast.success("Dish deleted successfully");
+              } catch (err: any) {
+                toast.error("Delete failed: " + err.message);
+              }
             }}
-            onEdit={(updated) => {
-              setItems((prev) =>
-                prev.map((dish) => (dish.id === updated.id ? updated : dish))
-              );
+            onEdit={async (updatedDish) => {
+              try {
+                const updated = await callRpc("menu.update", updatedDish);
+                setItems((prev) =>
+                  prev.map((dish) => (dish.id === updated.id ? updated : dish))
+                );
+                toast.success("Dish updated!");
+              } catch (err: any) {
+                toast.error("Update failed: " + err.message);
+              }
             }}
           />
         ))}

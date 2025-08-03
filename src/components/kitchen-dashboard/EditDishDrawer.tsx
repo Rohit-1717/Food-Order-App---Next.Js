@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -39,12 +38,17 @@ export function EditDishDrawer({
   const [form, setForm] = useState<MenuItem>({
     ...dish,
     category: dish.category || "",
+    discount: dish.discount ?? undefined,
   });
 
   const [imagePreview, setImagePreview] = useState<string>(dish.image || "");
 
   useEffect(() => {
-    setForm({ ...dish, category: dish.category || "" });
+    setForm({
+      ...dish,
+      category: dish.category || "",
+      discount: dish.discount ?? undefined,
+    });
     setImagePreview(dish.image || "");
   }, [dish]);
 
@@ -52,9 +56,61 @@ export function EditDishDrawer({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.price || !form.category) return;
-    onSave(form);
+
+    // ✅ Only send the editable fields - DO NOT send the entire form object
+    const updateParams: any = {
+      id: form.id,
+      name: form.name,
+      price: +form.price,
+      category: form.category,
+      deliveryTime: form.deliveryTime ?? 30,
+    };
+
+    // Only include image if it exists
+    if (form.image) {
+      updateParams.image = form.image;
+    }
+
+    // Only include discount if it exists and is a valid number
+    if (
+      form.discount !== undefined &&
+      form.discount !== null &&
+      !isNaN(form.discount)
+    ) {
+      updateParams.discount = +form.discount;
+    }
+
+    const response = await fetch("/api/rpc", {
+      method: "POST",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "menu.update",
+        params: updateParams,
+        id: 1,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const result = await response.json();
+    
+
+    if (result.error) {
+      
+      return; // Don't proceed if there's an error
+    }
+
+    // Update local state with the form data
+    const updated: MenuItem = {
+      ...dish, // Keep original dish data
+      ...form, // Override with form changes
+      price: +form.price,
+      discount: form.discount ? +form.discount : undefined,
+      deliveryTime: form.deliveryTime ?? 30,
+    };
+
+    onSave(updated);
     setOpen(false);
   };
 
@@ -63,9 +119,7 @@ export function EditDishDrawer({
       <DrawerContent className="max-w-xl mx-auto rounded-t-lg md:rounded-md">
         <DrawerHeader className="px-4 md:px-6">
           <DrawerTitle>Edit Dish</DrawerTitle>
-          <DrawerDescription>
-            Update the dish details and availability
-          </DrawerDescription>
+          <DrawerDescription>Update the dish details</DrawerDescription>
         </DrawerHeader>
 
         <div className="px-4 md:px-6 py-4 space-y-6 overflow-y-auto max-h-[80vh]">
@@ -89,6 +143,23 @@ export function EditDishDrawer({
               value={form.price}
               onChange={(e) => handleChange("price", +e.target.value)}
               placeholder="e.g. 250"
+            />
+          </div>
+
+          {/* Discount */}
+          <div className="grid gap-2">
+            <Label htmlFor="discount">Discount (%)</Label>
+            <Input
+              id="discount"
+              type="number"
+              value={form.discount ?? ""}
+              onChange={(e) =>
+                handleChange(
+                  "discount",
+                  e.target.value ? +e.target.value : undefined
+                )
+              }
+              placeholder="e.g. 10"
             />
           </div>
 
@@ -130,15 +201,6 @@ export function EditDishDrawer({
                 className="w-full h-40 object-cover rounded-md border"
               />
             )}
-          </div>
-
-          {/* Availability */}
-          <div className="flex items-center justify-between">
-            <Label>Available</Label>
-            <Switch
-              checked={form.isAvailable}
-              onCheckedChange={(val) => handleChange("isAvailable", val)}
-            />
           </div>
         </div>
 

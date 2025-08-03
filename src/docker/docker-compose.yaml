@@ -1,0 +1,11 @@
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: foodUser
+      POSTGRES_PASSWORD: foodispassword
+      POSTGRES_DB: foodDB
+    ports:
+      - 5432:5432
