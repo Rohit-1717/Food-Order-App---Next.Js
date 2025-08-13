@@ -1,22 +1,51 @@
+"use client";
+
 import Link from "next/link";
 import { Menu, ShoppingCart } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+
+import { Badge } from "@/components/ui/badge";
+
 import { ModeToggle } from "./theme-toggle";
 import UserAvatar from "./UserAvatar";
 import { NavLinkClient } from "@/components/NavLinkClient";
+import { useAuthStore } from "@/lib/store/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useCartStore } from "@/lib/store/cart";
 
-export default async function Navbar() {
-  const isLoggedIn = true;
+export default function Navbar() {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
 
-  const user = isLoggedIn
-    ? {
-        name: "Rohit",
-        avatar:
-          "https://plus.unsplash.com/premium_photo-1665664652337-2deaf3f6218e?q=80&w=464&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      }
-    : null;
+  // Get auth state and actions from store
+  const { user, isAuthenticated, mode, logout } = useAuthStore();
+  // Add this near top of component function
+  const totalItems = useCartStore((state) => state.totalItems());
+
+  // Hide navbar completely for authenticated kitchen users
+  if (isAuthenticated && mode === "kitchen") {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.push("/");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast.error(error?.message || "Logout failed");
+      // Even if logout fails on server, redirect to home
+      router.push("/");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background">
@@ -37,7 +66,7 @@ export default async function Navbar() {
           <Link href="/offers" className="hover:text-primary transition-colors">
             Offers
           </Link>
-          {isLoggedIn && (
+          {isAuthenticated && mode === "user" && (
             <>
               <Link
                 href="/orders"
@@ -57,15 +86,25 @@ export default async function Navbar() {
 
         {/* Right Side (lg+) */}
         <div className="hidden lg:flex items-center space-x-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart">
-              <ShoppingCart className="w-5 h-5" />
-              <span className="sr-only">Cart</span>
-            </Link>
-          </Button>
+          {/* Only show cart for regular users */}
+          {(!isAuthenticated || mode === "user") && (
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/cart" className="relative">
+                <ShoppingCart className="w-6 h-6" />
+                {isAuthenticated && totalItems > 0 && (
+                  <Badge
+                    className="absolute -top-0 -right-2 rounded-full px-2 py-0.5 text-xs"
+                    variant="destructive"
+                  >
+                    {useCartStore.getState().totalItems()}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
+          )}
 
-          {isLoggedIn ? (
-            user && <UserAvatar user={user} />
+          {isAuthenticated ? (
+            <>{user && <UserAvatar user={user} />}</>
           ) : (
             <>
               <Button variant="outline" size="sm" asChild>
@@ -96,7 +135,7 @@ export default async function Navbar() {
                 <Separator />
                 <NavLinkClient href="/offers">Offers</NavLinkClient>
 
-                {isLoggedIn && (
+                {isAuthenticated && mode === "user" && (
                   <>
                     <Separator />
                     <NavLinkClient href="/orders">Orders</NavLinkClient>
@@ -107,30 +146,46 @@ export default async function Navbar() {
                   </>
                 )}
 
-                <Separator />
-                <NavLinkClient href="/cart">Cart</NavLinkClient>
-
-                {isLoggedIn ? (
+                {/* Only show cart for regular users */}
+                {(!isAuthenticated || mode === "user") && (
                   <>
                     <Separator />
-                    <NavLinkClient href="/user-account">Account</NavLinkClient>
+                    <NavLinkClient href="/cart">Cart</NavLinkClient>
+                  </>
+                )}
+
+                {isAuthenticated ? (
+                  <>
                     <Separator />
-                    <form action="/logout" method="POST">
-                      <Button
-                        variant="destructive"
-                        type="submit"
-                        className="w-full"
-                      >
-                        Logout
-                      </Button>
-                    </form>
+                    {mode === "user" && (
+                      <>
+                        <NavLinkClient href="/profile">Profile</NavLinkClient>
+                        <Separator />
+                      </>
+                    )}
+                    {mode === "kitchen" && (
+                      <>
+                        <NavLinkClient href="/kitchen/dashboard">
+                          Dashboard
+                        </NavLinkClient>
+                        <Separator />
+                      </>
+                    )}
+                    <Button
+                      variant="destructive"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full"
+                    >
+                      {isLoggingOut ? "Logging out..." : "Logout"}
+                    </Button>
                   </>
                 ) : (
                   <>
                     <Separator />
                     <NavLinkClient href="/auth/login">Login</NavLinkClient>
                     <Separator />
-                    <NavLinkClient href="/kitchen-login">
+                    <NavLinkClient href="/kitchen/login">
                       Kitchen Login
                     </NavLinkClient>
                   </>

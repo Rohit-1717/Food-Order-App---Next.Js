@@ -9,18 +9,42 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { useAuthStore } from "@/lib/store/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export default function UserAvatar({
   user,
 }: {
-  user: { name: string; avatar?: string };
+  user: { fullName: string; avatar?: string };
 }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+  const { logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      router.push("/");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast.error(error?.message || "Logout failed");
+      // Even if logout fails on server, redirect to home
+      router.push("/");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+          <AvatarImage src={user.avatar} alt={user.fullName} />
+          <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -28,15 +52,14 @@ export default function UserAvatar({
           <Link href="/user-account">Account</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <form action="/logout" method="POST" className="w-full">
-            <Button
-              variant={"destructive"}
-              type="submit"
-              className="w-full text-left"
-            >
-              Logout
-            </Button>
-          </form>
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full text-left justify-start h-auto p-2"
+          >
+            {isLoggingOut ? "Logging out..." : "Logout"}
+          </Button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

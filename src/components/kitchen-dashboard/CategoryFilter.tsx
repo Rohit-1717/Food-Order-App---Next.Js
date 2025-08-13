@@ -4,7 +4,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { BadgePercent, Utensils, Coffee, Sandwich, Salad } from "lucide-react";
+import {
+  BadgePercent,
+  Utensils,
+  Coffee,
+  Sandwich,
+  Salad,
+  Cake,
+} from "lucide-react";
 
 interface CategoryFilterProps {
   selectedCategory: string | null;
@@ -16,6 +23,7 @@ const categories = [
   { name: "Starters", icon: Salad },
   { name: "Main Course", icon: Sandwich },
   { name: "Beverages", icon: Coffee },
+  { name: "Deserts", icon: Cake },
   { name: "Offers", icon: BadgePercent },
 ];
 

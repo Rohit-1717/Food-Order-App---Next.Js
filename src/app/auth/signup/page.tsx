@@ -1,114 +1,131 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
-import CountryCodeSelector from "@/components/CountryCodeSelector";
+import { useAuthStore } from "@/lib/store/auth";
 
+export default function UserSignupForm() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-export default function SignupForm() {
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [countryCode, setCountryCode] = useState("+91");
+  const signup = useAuthStore((state) => state.signup);
 
-  const handleSendOtp = () => {
-    if (!fullName.trim()) {
-      toast.error("Full name is required");
-      return;
+  const handleInputChange =
+    (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSubmit();
     }
-    if (!phone.trim()) {
-      toast.error("Enter a valid phone number");
-      return;
-    }
-    setOtpSent(true);
-    toast.success("OTP sent successfully");
   };
 
-  const handleSignup = () => {
-    if (!otp.trim()) {
-      toast.error("Enter the OTP to continue");
+  const handleSubmit = async () => {
+    const { fullName, email, password } = formData;
+
+    if (!fullName.trim() || !email.trim() || !password) {
+      toast.error("All fields are required");
       return;
     }
-    toast.success("Signed up successfully!");
-    // Later: Save to DB, redirect, or store session
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Use the auth store method which handles everything
+      await signup({
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      toast.success("User registered successfully! 🎉");
+
+      // Navigate based on whether auto-login happened
+      setTimeout(() => {
+        router.push("/menu");
+      }, 1000);
+    } catch (error: any) {
+      console.error("User signup error:", error);
+      toast.error(error?.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white dark:bg-zinc-900 rounded-xl shadow-md px-6 py-8 space-y-6 my-10">
-      <h2 className="text-2xl font-bold text-center">Create Your Foodie Account</h2>
+    <main className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-md px-6 py-8 space-y-6">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Sign Up On Foodie</h2>
+          </div>
 
-      {!otpSent ? (
-        <>
-          {/* Full Name Field */}
-          <Input
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-
-          {/* Phone + Country Code Selector */}
-          <div className="flex gap-2 items-center">
-            <CountryCodeSelector value={countryCode} setValue={setCountryCode} />
+          <div className="space-y-4">
             <Input
-              type="tel"
-              placeholder="Phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="flex-1"
+              placeholder="Your Name"
+              value={formData.fullName}
+              onChange={handleInputChange("fullName")}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
+            />
+            <Input
+              placeholder="Email Address"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange("email")}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
+            />
+            <Input
+              placeholder="Password (min 6 characters)"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange("password")}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
             />
           </div>
 
           <Button
             className="w-full bg-red-500 hover:bg-red-600 text-white"
-            onClick={handleSendOtp}
+            onClick={handleSubmit}
+            disabled={isLoading}
           >
-            Send One Time Password
-          </Button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-2">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <Separator className="flex-1" />
-          </div>
-
-          {/* Google Sign Up */}
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-2"
-            onClick={() => toast.info("Google Sign Up coming soon")}
-          >
-            <FcGoogle className="w-5 h-5" />
-            Sign up with Google
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </Button>
 
           <p className="text-sm text-center mt-4">
             Already have an account?{" "}
-            <a href="/auth/login" className="text-red-500 hover:underline">
-              Login
+            <a
+              href="/auth/login"
+              className="text-red-500 font-medium hover:underline"
+            >
+              Sign in
             </a>
           </p>
-        </>
-      ) : (
-        <>
-          <Input
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <Button
-            className="w-full bg-red-500 hover:bg-red-600 text-white"
-            onClick={handleSignup}
-          >
-            Sign Up
-          </Button>
-        </>
-      )}
-    </div>
+        </div>
+      </div>
+    </main>
   );
 }

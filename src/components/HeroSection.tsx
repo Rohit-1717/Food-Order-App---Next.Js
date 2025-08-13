@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import food_img from "../../public/freepik__adjust__93277.png";
 
@@ -37,9 +38,11 @@ export default function HeroSection() {
           </p>
 
           <div className="w-full flex justify-center lg:justify-start">
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white text-base sm:text-lg px-6 py-2 sm:px-8 sm:py-3 rounded-md">
-              Order Now
-            </Button>
+            <Link href="/menu">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white text-base sm:text-lg px-6 py-2 sm:px-8 sm:py-3 rounded-md">
+                Order Now
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

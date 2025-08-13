@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-
 import Notifications from "@/components/Notifications";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import  Navbar  from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,9 +35,10 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Notifications />
-          <Navbar/>
+          <Navbar />
           {children}
-          <Footer/>
+          <Toaster position="top-right" />
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

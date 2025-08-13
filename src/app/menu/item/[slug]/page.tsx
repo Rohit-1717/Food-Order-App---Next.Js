@@ -1,8 +1,12 @@
+"use client";
+
 import { notFound } from "next/navigation";
 import { mockMenuData as originalMockMenuData } from "@/lib/data/menuData";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { useCartStore } from "@/lib/store/cart";
+import { toast } from "sonner"; // ✅ Sonner
 
 // Generate slug for each item
 const mockMenuData = originalMockMenuData.map((item) => ({
@@ -23,6 +27,24 @@ export default function SingleItemPage({ params }: Props) {
   const { slug } = params;
 
   const item = mockMenuData.find((food) => food.slug === slug);
+
+  const addToCart = useCartStore((state) => state.addToCart); // ✅ get action from store
+
+  const handleAdd = () => {
+    if (!item) return;
+
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: 1,
+    });
+
+    toast.success(`${item.name} added to cart!`, {
+      description: "You can view your cart to place the order.",
+    });
+  };
 
   if (!item) return notFound();
 
@@ -79,7 +101,12 @@ export default function SingleItemPage({ params }: Props) {
           <div className="space-y-3">
             <p className="text-2xl font-bold text-primary">₹{item.price}</p>
 
-            <Button variant="order" size="lg" className="w-full sm:w-fit">
+            <Button
+              variant="order"
+              size="lg"
+              className="w-full sm:w-fit"
+              onClick={handleAdd} // ✅ Add to Cart logic
+            >
               Add to Cart
             </Button>
           </div>

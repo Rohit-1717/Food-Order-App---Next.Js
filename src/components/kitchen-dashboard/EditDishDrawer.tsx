@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { MenuItem } from "@/types/types";
+import { toast } from "sonner";
 
 interface EditDishDrawerProps {
   open: boolean;
@@ -42,6 +43,7 @@ export function EditDishDrawer({
   });
 
   const [imagePreview, setImagePreview] = useState<string>(dish.image || "");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setForm({
@@ -56,10 +58,45 @@ export function EditDishDrawer({
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    if (!form.name || !form.price || !form.category) return;
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
 
-    // ✅ Only send the editable fields - DO NOT send the entire form object
+    setUploading(true);
+    try {
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Upload failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (data.success && data.data?.secure_url) {
+        const imageUrl = data.data.secure_url;
+        handleChange("image", imageUrl);
+        setImagePreview(imageUrl);
+        toast.success("Image uploaded successfully!");
+      } else {
+        throw new Error("Upload failed: Invalid response");
+      }
+    } catch (err) {
+      console.error("Image upload failed", err);
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.price || !form.category) {
+      toast.error("Please fill in all required fields (name, price, category)");
+      return;
+    }
+
     const updateParams: any = {
       id: form.id,
       name: form.name,
@@ -68,50 +105,55 @@ export function EditDishDrawer({
       deliveryTime: form.deliveryTime ?? 30,
     };
 
-    // Only include image if it exists
-    if (form.image) {
-      updateParams.image = form.image;
-    }
+    // Always include image field, even if empty
+    updateParams.image = form.image || "";
 
-    // Only include discount if it exists and is a valid number
     if (
       form.discount !== undefined &&
       form.discount !== null &&
-      !isNaN(form.discount)
+      !isNaN(form.discount) &&
+      form.discount > 0
     ) {
       updateParams.discount = +form.discount;
     }
 
-    const response = await fetch("/api/rpc", {
-      method: "POST",
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "menu.update",
-        params: updateParams,
-        id: 1,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      const response = await fetch("/api/rpc", {
+        method: "POST",
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "menu.update",
+          params: updateParams,
+          id: 1,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
 
-    const result = await response.json();
-    
+      const result = await response.json();
 
-    if (result.error) {
-      
-      return; // Don't proceed if there's an error
+      if (result.error) {
+        toast.error(
+          "Failed to update dish: " + (result.error.message || "Unknown error")
+        );
+        return;
+      }
+
+      const updated: MenuItem = {
+        ...dish,
+        ...form,
+        price: +form.price,
+        discount:
+          form.discount && form.discount > 0 ? +form.discount : undefined,
+        deliveryTime: form.deliveryTime ?? 30,
+      };
+
+      onSave(updated);
+      toast.success(`${updated.name} updated successfully!`);
+      setOpen(false);
+    } catch (error) {
+      console.error("Save failed:", error);
+      toast.error("Failed to save changes. Please try again.");
     }
-
-    // Update local state with the form data
-    const updated: MenuItem = {
-      ...dish, // Keep original dish data
-      ...form, // Override with form changes
-      price: +form.price,
-      discount: form.discount ? +form.discount : undefined,
-      deliveryTime: form.deliveryTime ?? 30,
-    };
-
-    onSave(updated);
-    setOpen(false);
   };
 
   return (
@@ -123,9 +165,8 @@ export function EditDishDrawer({
         </DrawerHeader>
 
         <div className="px-4 md:px-6 py-4 space-y-6 overflow-y-auto max-h-[80vh]">
-          {/* Name */}
           <div className="grid gap-2">
-            <Label htmlFor="name">Dish Name</Label>
+            <Label htmlFor="name">Dish Name *</Label>
             <Input
               id="name"
               value={form.name}
@@ -134,24 +175,26 @@ export function EditDishDrawer({
             />
           </div>
 
-          {/* Price */}
           <div className="grid gap-2">
-            <Label htmlFor="price">Price (₹)</Label>
+            <Label htmlFor="price">Price (₹) *</Label>
             <Input
               id="price"
               type="number"
+              min="0"
+              step="0.01"
               value={form.price}
               onChange={(e) => handleChange("price", +e.target.value)}
               placeholder="e.g. 250"
             />
           </div>
 
-          {/* Discount */}
           <div className="grid gap-2">
             <Label htmlFor="discount">Discount (%)</Label>
             <Input
               id="discount"
               type="number"
+              min="0"
+              max="100"
               value={form.discount ?? ""}
               onChange={(e) =>
                 handleChange(
@@ -163,9 +206,8 @@ export function EditDishDrawer({
             />
           </div>
 
-          {/* Category */}
           <div className="grid gap-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">Category *</Label>
             <Select
               value={form.category || ""}
               onValueChange={(val) => handleChange("category", val)}
@@ -182,31 +224,82 @@ export function EditDishDrawer({
             </Select>
           </div>
 
-          {/* Image URL */}
           <div className="grid gap-2">
-            <Label htmlFor="image">Image URL</Label>
+            <Label htmlFor="deliveryTime">Delivery Time (minutes)</Label>
+            <Input
+              id="deliveryTime"
+              type="number"
+              min="5"
+              max="120"
+              value={form.deliveryTime ?? 30}
+              onChange={(e) => handleChange("deliveryTime", +e.target.value)}
+              placeholder="e.g. 30"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="image">Dish Image</Label>
             <Input
               id="image"
-              value={form.image || ""}
+              type="file"
+              accept="image/*"
               onChange={(e) => {
-                handleChange("image", e.target.value);
-                setImagePreview(e.target.value);
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Validate file size (e.g., max 5MB)
+                  if (file.size > 5 * 1024 * 1024) {
+                    toast.error("Image size should be less than 5MB");
+                    return;
+                  }
+                  handleImageUpload(file);
+                }
               }}
-              placeholder="Paste image URL here"
+              disabled={uploading}
             />
-            {imagePreview && (
-              <img
-                src={imagePreview}
-                alt="Dish preview"
-                className="w-full h-40 object-cover rounded-md border"
-              />
+
+            {uploading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                Uploading image...
+              </div>
+            )}
+
+            {imagePreview && !uploading && (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Dish preview"
+                  className="w-full h-40 object-cover rounded-md border"
+                  onError={(e) => {
+                    console.error("Image failed to load:", imagePreview);
+                    setImagePreview("");
+                    handleChange("image", "");
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    setImagePreview("");
+                    handleChange("image", "");
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
             )}
           </div>
         </div>
 
         <DrawerFooter className="px-4 md:px-6 pb-4 md:pb-6">
-          <Button className="w-full" onClick={handleSave}>
-            Save Changes
+          <Button
+            className="w-full"
+            onClick={handleSave}
+            disabled={uploading || !form.name || !form.price || !form.category}
+          >
+            {uploading ? "Uploading..." : "Save Changes"}
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" className="w-full">

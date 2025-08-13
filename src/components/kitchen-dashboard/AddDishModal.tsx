@@ -16,6 +16,15 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { useAuthStore } from "@/lib/store/auth";
 
 type CreateMenuInput = z.infer<typeof createMenuSchema>;
 
@@ -34,6 +43,8 @@ export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
   const [variants, setVariants] = useState<string[]>([]);
   const [variantInput, setVariantInput] = useState("");
   const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const handleAddVariant = () => {
     if (variantInput.trim()) {
@@ -42,18 +53,58 @@ export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploading(true);
+    try {
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Upload failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (data.success && data.data?.secure_url) {
+        const imageUrl = data.data.secure_url;
+        setImage(imageUrl);
+        setImagePreview(imageUrl);
+        toast.success("Image uploaded successfully!");
+      } else {
+        throw new Error("Upload failed: Invalid response");
+      }
+    } catch (err) {
+      console.error("Image upload failed", err);
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = () => {
     if (!name || !price || !category) return;
+
+    const kitchenId = useAuthStore.getState().user?.id;
+
+    if (!kitchenId) {
+      toast.error("Kitchen ID not found. Please login again.");
+      return;
+    }
 
     const newDish: CreateMenuInput = {
       name,
       price: parseFloat(price),
       image,
       category,
-      type: "veg", // Hardcoded for now
-      kitchenId: "kitchen_1", // Hardcoded kitchenId for testing
-      deliveryTime: 30, // Hardcoded delivery time
-      rating: 4.5, // Optional, you can remove if needed
+      type: "veg",
+      kitchenId, // ✅ dynamically set
+      deliveryTime: 30,
+      rating: 4.5,
       discount: discount || undefined,
     };
 
@@ -68,6 +119,7 @@ export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
     setIsAvailable(true);
     setVariants([]);
     setImage("");
+    setImagePreview("");
   };
 
   return (
@@ -94,19 +146,43 @@ export function AddDishModal({ open, setOpen, onAdd }: AddDishModalProps) {
 
           <div className="grid gap-1">
             <Label>Category</Label>
-            <Input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            />
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Starters">Starters</SelectItem>
+                <SelectItem value="Main Course">Main Course</SelectItem>
+                <SelectItem value="Beverages">Beverages</SelectItem>
+                <SelectItem value="Desert">Deserts</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-1">
-            <Label>Image URL</Label>
+            <Label>Dish Image</Label>
             <Input
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://example.com/dish.jpg"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file);
+              }}
+              disabled={uploading}
             />
+            {uploading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                Uploading image...
+              </div>
+            )}
+            {imagePreview && (
+              <img
+                src={imagePreview}
+                alt="Dish preview"
+                className="w-24 h-24 object-cover rounded-md border"
+              />
+            )}
           </div>
 
           <div className="grid gap-1">

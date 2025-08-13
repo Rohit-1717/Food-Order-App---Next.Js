@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mockMenuData } from "@/lib/data/menuData";
+import { useCartStore } from "@/lib/store/cart";
+import { useAuthStore } from "@/lib/store/auth"; // ✅ auth store
+import { toast } from "sonner"; // ✅ toast from Sonner
 
 function AutoplayPlugin(slideInterval = 500) {
   return (slider: any) => {
@@ -55,6 +58,9 @@ const hotDeals = mockMenuData
   }));
 
 export default function DiscountSlider() {
+  const addToCart = useCartStore((state) => state.addToCart);
+  const isLoggedIn = useAuthStore((state) => state.isAuthenticated); 
+
   const [sliderRef] = useKeenSlider<HTMLDivElement>(
     {
       loop: true,
@@ -74,6 +80,23 @@ export default function DiscountSlider() {
     },
     [AutoplayPlugin(3000)]
   );
+
+  const handleAddToCart = (item: (typeof hotDeals)[number]) => {
+    if (!isLoggedIn) {
+      toast.warning("Please login first and get your meal in 10 mins 🍽️");
+      return;
+    }
+
+    addToCart({
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      price: item.price,
+      quantity: 1,
+    });
+
+    toast.success(`${item.name} added to cart!`);
+  };
 
   return (
     <section className="px-4 md:px-6 lg:px-16 py-12 bg-background">
@@ -107,7 +130,11 @@ export default function DiscountSlider() {
                 {item.name}
               </h3>
               <p className="text-sm text-muted-foreground">₹{item.price}</p>
-              <Button className="w-full" variant="order">
+              <Button
+                className="w-full"
+                variant="order"
+                onClick={() => handleAddToCart(item)}
+              >
                 Order Now
               </Button>
             </CardContent>

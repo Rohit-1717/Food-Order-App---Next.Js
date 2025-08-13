@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// This is your Prisma schema file
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,42 +9,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Model
+//
+// =========================
+//        USER MODEL
+// =========================
+//
 
 model User {
-  id          String    @id @default(cuid())
-  fullName    String
-  phoneNumber String    @unique
-  email       String?
-  avatar      String?
-  dateOfBirth DateTime?
-  gender      String?
-  address     String?
-  orders      Order[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  Review      Review[]
+  id             String    @id @default(cuid())
+  fullName       String
+  phone          String?
+  email          String    @unique
+  hashedPassword String // ✅ keep only this
+  avatar         String?
+  dateOfBirth    DateTime?
+  gender         String?
+  address        String?
+  orders         Order[]
+  Review         Review[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
-// Kitchen Model
+//
+// ==============================
+//      KITCHEN ADMIN MODEL
+// ==============================
+//
 
 model KitchenAdmin {
-  id           String         @id @default(cuid())
-  ownerName    String
-  kitchenName  String
-  phoneNumber  String         @unique
-  email        String?
-  avatar       String?
-  address      String
-  cuisineType  String?
-  menuItems    Menu[]
-  orders       Order[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  Notification Notification[]
+  id             String         @id @default(cuid())
+  ownerName      String
+  kitchenName    String
+  phone          String?
+  email          String         @unique
+  hashedPassword String         // ✅ ONLY this password field
+  avatar         String?
+  address        String?
+  cuisineType    String?
+  menuItems      Menu[]
+  orders         Order[]
+  Notification   Notification[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
-// Menu Model
+//
+// ==============================
+//          MENU MODEL
+// ==============================
+//
 
 model Menu {
   id           String       @id @default(cuid())
@@ -61,14 +70,13 @@ model Menu {
   rating       Float?
   deliveryTime Int
   category     String
-  discount     String?      // ← Change this from Float? to String?
+  discount     String? // kept as String?
   isAvailable  Boolean      @default(true)
-  
   kitchen      KitchenAdmin @relation(fields: [kitchenId], references: [id])
   kitchenId    String
+  Review       Review[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  Review       Review[]
 }
 
 enum DishType {
@@ -76,16 +84,20 @@ enum DishType {
   NON_VEG
 }
 
-// Order Model
+//
+// ==============================
+//          ORDER MODEL
+// ==============================
+//
 
 model Order {
   id                 String        @id @default(cuid())
   userId             String
-  user               User          @relation(fields: [userId], references: [id])
   kitchenId          String
+  user               User          @relation(fields: [userId], references: [id])
   kitchen            KitchenAdmin  @relation(fields: [kitchenId], references: [id])
   userName           String
-  items              Json // list of items [{ name, qty, price }]
+  items              Json
   placedAt           DateTime      @default(now())
   paymentMode        PaymentMode
   isPaid             Boolean
@@ -113,7 +125,11 @@ enum OrderStatus {
   REJECTED
 }
 
-// Notification Model
+//
+// ==============================
+//       NOTIFICATION MODEL
+// ==============================
+//
 
 model Notification {
   id        String       @id @default(cuid())
@@ -124,7 +140,11 @@ model Notification {
   createdAt DateTime     @default(now())
 }
 
-// Review Model
+//
+// ==============================
+//          REVIEW MODEL
+// ==============================
+//
 
 model Review {
   id        String   @id @default(cuid())
@@ -137,3 +157,18 @@ model Review {
   createdAt DateTime @default(now())
 }
 
+//
+// ==============================
+//            OTP MODEL
+// ==============================
+//
+
+model Otp {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otps")
+}

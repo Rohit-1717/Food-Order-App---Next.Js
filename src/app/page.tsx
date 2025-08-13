@@ -1,6 +1,5 @@
 import HeroSection from "@/components/HeroSection";
 import CategorySection from "@/components/CategorySection";
-import PopularRestaurantSection from "@/components/PopularRestaurantSection";
 import DiscountSlider from "@/components/DiscountSlider";
 
 export default function Home() {

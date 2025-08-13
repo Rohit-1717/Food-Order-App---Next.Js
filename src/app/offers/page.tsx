@@ -1,4 +1,5 @@
-// app/offers/page.tsx
+"use client";
+
 import { mockMenuData } from "@/lib/data/menuData";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,11 +12,28 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import OfferBanner from "@/components/OfferBanner";
-
+import { useCartStore } from "@/lib/store/cart"; // ✅ Zustand cart store
+import { toast } from "sonner"; // ✅ Sonner toast
 
 const discountedItems = mockMenuData.filter((item) => item.discount);
 
 export default function OfferPage() {
+  const addToCart = useCartStore((state) => state.addToCart);
+
+  const handleAddToCart = (item: (typeof mockMenuData)[0]) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+      quantity: 1,
+    });
+
+    toast.success(`${item.name} added to cart!`, {
+      description: "Check your cart to complete the order.",
+    });
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden px-4 sm:px-6 lg:px-16 my-4">
       <OfferBanner />
@@ -58,8 +76,9 @@ export default function OfferPage() {
                   variant="order"
                   size="sm"
                   className="w-full text-sm font-medium hover:text-white"
+                  onClick={() => handleAddToCart(item)}
                 >
-                  Order Now
+                  Add to Cart
                 </Button>
               </CardFooter>
             </Card>
